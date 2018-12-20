@@ -587,7 +587,9 @@ public class AtlasDesugarTransform extends Transform {
     }
 
     private boolean inMainDex(JarInput jarInput) throws IOException {
-
+        if (appVariantOutputContext.getAwbTransformMap().values().size() == 0||!appVariantOutputContext.getVariantContext().getAtlasExtension().isAtlasEnabled()){
+            return true;
+        }
         return AtlasBuildContext.atlasMainDexHelperMap.get(appVariantOutputContext.getVariantContext().getVariantName()).inMainDex(jarInput);
     }
 }

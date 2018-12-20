@@ -577,10 +577,12 @@ public class AtlasProguardTransform extends ProGuardTransform {
     @Override
     protected void inputJar(
             @NonNull ClassPath classPath, @NonNull File file, @Nullable List<String> filter) {
+        appVariantContext.getProject().getLogger().info("inputJar :" + file.getAbsolutePath());
+
         if (file.isDirectory()) {
             super.inputJar(classPath, file, filter);
         } else {
-            if (AtlasBuildContext.atlasMainDexHelperMap.get(appVariantContext.getVariantName()).inMainDex(file)) {
+            if (AtlasBuildContext.atlasMainDexHelperMap.get(appVariantContext.getVariantName()).inMainDex(file) ||!appVariantContext.getAtlasExtension().isAtlasEnabled()||AtlasBuildContext.androidDependencyTrees.get(appVariantContext.getVariantName()).getAwbBundles().size() == 0) {
                 super.inputJar(classPath, file, filter);
             } else if (appVariantContext.getScope().getGlobalScope().getAndroidBuilder().getBootClasspath(true).contains(file)) {
                 super.inputJar(classPath, file, filter);
