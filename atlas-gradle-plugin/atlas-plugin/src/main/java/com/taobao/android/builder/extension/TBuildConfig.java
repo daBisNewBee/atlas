@@ -236,6 +236,16 @@ public class TBuildConfig {
 
     private Set<String>bundleToMdex = Sets.newHashSet();
 
+    public boolean isEffectiveConsumerProguardFiles() {
+        return effectiveConsumerProguardFiles;
+    }
+
+    public void setEffectiveConsumerProguardFiles(boolean effectiveConsumerProguardFiles) {
+        this.effectiveConsumerProguardFiles = effectiveConsumerProguardFiles;
+    }
+
+    private boolean effectiveConsumerProguardFiles = false;
+
 
     public Boolean getAllBundlesToMdex() {
         return allBundlesToMdex;

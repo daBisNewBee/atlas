@@ -252,8 +252,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROGUARD_RULES;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 
 /**
@@ -308,6 +311,10 @@ public class AtlasProguardTransform extends ProGuardTransform {
             defaultProguardFiles.addAll(appVariantContext.getVariantData().getVariantConfiguration().getBuildType().getProguardFiles());
             nonConsumerProguardFiles.addAll(
                     appVariantContext.getVariantData().getVariantConfiguration().getBuildType().getProguardFiles());
+
+            if (buildConfig.isEffectiveConsumerProguardFiles()) {
+                nonConsumerProguardFiles.addAll(appVariantContext.getScope().getArtifactFileCollection(COMPILE_CLASSPATH,ALL,PROGUARD_RULES).getFiles());
+            }
 
         }
         List<AwbBundle> awbBundles = AtlasBuildContext.androidDependencyTrees.get(

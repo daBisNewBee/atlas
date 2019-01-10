@@ -172,11 +172,12 @@ public class BuildAtlasEnvTask extends BaseTask {
         }
 
         for (ResolvedArtifactResult resolvedArtifactResult : javaResourcesArtifacts) {
+//            AtlasBuildContext.atlasMainDexHelperMap.get(appVariantContext.getVariantName()).getMainResFiles().put(resolvedArtifactResult.getFile().getAbsolutePath(),true);
             if (resolvedArtifactResult.getId().getComponentIdentifier() instanceof DefaultModuleComponentIdentifier) {
-                allJavaRes.put(((DefaultModuleComponentIdentifier) resolvedArtifactResult.getId().getComponentIdentifier()).getGroup() + ":" + ((DefaultModuleComponentIdentifier) resolvedArtifactResult.getId().getComponentIdentifier()).getModule(), resolvedArtifactResult.getFile());
+                allJavaRes.put(((DefaultModuleComponentIdentifier) resolvedArtifactResult.getId().getComponentIdentifier()).getGroup() + ":" + ((DefaultModuleComponentIdentifier) resolvedArtifactResult.getId().getComponentIdentifier()).getModule()+":"+resolvedArtifactResult.getFile().getName(), resolvedArtifactResult.getFile());
             } else if (resolvedArtifactResult.getId().getComponentIdentifier() instanceof DefaultProjectComponentIdentifier) {
                 String projectPath = ((DefaultProjectComponentIdentifier) resolvedArtifactResult.getId().getComponentIdentifier()).getProjectPath();
-                allJavaRes.put(projectPath.substring(projectPath.lastIndexOf(":") + 1), resolvedArtifactResult.getFile());
+                allJavaRes.put(projectPath.substring(projectPath.lastIndexOf(":") + 1)+":"+resolvedArtifactResult.getFile().getName(), resolvedArtifactResult.getFile());
             }
         }
 
@@ -245,7 +246,7 @@ public class BuildAtlasEnvTask extends BaseTask {
             String moudleName = androidLibrary.getResolvedCoordinates().toString().split(":")[1];
             fillMainManifest(name, moudleName);
             fillMainJar(name, moudleName);
-            fillAllJavaRes(name, moudleName);
+            fillAllJavaRes(name+":"+androidLibrary.getJarFile().getName(), moudleName);
             fillMainSolibs(name, moudleName);
         }
 
@@ -253,7 +254,7 @@ public class BuildAtlasEnvTask extends BaseTask {
             String moudleName = jarLibrary.getName().split(":")[1];
             String name = jarLibrary.getResolvedCoordinates().getGroupId() + ":" + jarLibrary.getResolvedCoordinates().getArtifactId();
             fillMainJar(name, moudleName);
-            fillAllJavaRes(name, moudleName);
+            fillAllJavaRes(name+":"+jarLibrary.getJarFile().getName(), moudleName);
         }
 
         for (SoLibrary soLibrary : mainSoLibraries) {
@@ -273,7 +274,7 @@ public class BuildAtlasEnvTask extends BaseTask {
                 String moudleName = androidLibrary.getResolvedCoordinates().toString().split(":")[1];
                 fillAwbManifest(name, moudleName, awbBundle);
                 fillAwbJar(name, moudleName, awbBundle);
-                fillAwbAllJavaRes(name, moudleName, awbBundle);
+                fillAwbAllJavaRes(name+":"+androidLibrary.getJarFile().getName(), moudleName+":"+androidLibrary.getJarFile().getName(), awbBundle);
                 fillAwbSolibs(name, moudleName, awbBundle);
                 fillAwbAndroidRes(name, moudleName, awbBundle);
                 fillAwbAndroidAssets(name, moudleName, awbBundle);
@@ -294,7 +295,7 @@ public class BuildAtlasEnvTask extends BaseTask {
             String moudleName = awbBundle.getResolvedCoordinates().toString().split(":")[1];
             fillAwbManifest(name, moudleName, awbBundle);
             fillAwbJar(name, moudleName, awbBundle);
-            fillAwbAllJavaRes(name, moudleName, awbBundle);
+            fillAwbAllJavaRes(name+":"+awbBundle.getAndroidLibrary().getJarFile().getName(), moudleName+":"+awbBundle.getAndroidLibrary().getJarFile().getName(), awbBundle);
             fillAwbSolibs(name, moudleName, awbBundle);
             fillAwbAndroidRes(name, moudleName, awbBundle);
             fillAwbAndroidAssets(name, moudleName, awbBundle);

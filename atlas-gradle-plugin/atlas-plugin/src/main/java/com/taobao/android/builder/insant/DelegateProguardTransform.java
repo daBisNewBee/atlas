@@ -47,6 +47,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROGUARD_RULES;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 
 /**
@@ -105,6 +108,10 @@ public class DelegateProguardTransform extends MtlInjectTransform {
         super.transform(transformInvocation);
         firstTime = true;
         defaultProguardFiles.addAll(appVariantContext.getVariantData().getVariantConfiguration().getBuildType().getProguardFiles());
+
+        if (buildConfig.isEffectiveConsumerProguardFiles()) {
+            defaultProguardFiles.addAll(appVariantContext.getScope().getArtifactFileCollection(COMPILE_CLASSPATH,ALL,PROGUARD_RULES).getFiles());
+        }
 
         List<AwbBundle> awbBundles = AtlasBuildContext.androidDependencyTrees.get(
                 appVariantContext.getScope().getVariantConfiguration().getFullName()).getAwbBundles();
