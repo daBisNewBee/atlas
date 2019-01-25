@@ -16,6 +16,7 @@ import com.android.builder.sdk.TargetInfo;
 import com.android.builder.utils.ExceptionRunnable;
 import com.android.builder.utils.FileCache;
 import com.android.builder.utils.PerformanceUtils;
+import com.android.dx.command.dexer.DxContext;
 import com.android.ide.common.blame.Message;
 import com.android.ide.common.blame.ParsingProcessOutputHandler;
 import com.android.ide.common.blame.parser.DexParser;
@@ -90,7 +91,7 @@ public class DexByteCodeConverterHook extends DexByteCodeConverter {
 
     private static ExecutorService sDexExecutorService = null;
 
-    AtlasDexArchiveMerger atlasDexArchiveMerger;
+    DexArchiveMerger atlasDexArchiveMerger;
     private ILogger logger;
 
     private String type = "main-dex-dx-1.0";
@@ -354,7 +355,11 @@ public class DexByteCodeConverterHook extends DexByteCodeConverter {
                 dexPaths = dexFiles.stream().map(file -> file.toPath()).collect(Collectors.toList());
             }
             mainforkJoinPool = new ForkJoinPool();
-            atlasDexArchiveMerger = new AtlasDexArchiveMerger(mainforkJoinPool);
+            if (variantContext.getBuildType().getMultiDexConfig().isFastMultiDex()) {
+                atlasDexArchiveMerger = new AtlasDexArchiveMerger(mainforkJoinPool);
+            }else {
+                atlasDexArchiveMerger = new DxDexArchiveMerger(new DxContext(),mainforkJoinPool);
+            }
             if (!variantContext.getAtlasExtension().getTBuildConfig().getMergeBundlesDex()) {
                 try {
                     atlasDexArchiveMerger.mergeDexArchives(dexPaths, outDexFolder.toPath(), mainDexList ==null? null:mainDexList.toPath(), DexingType.LEGACY_MULTIDEX);
