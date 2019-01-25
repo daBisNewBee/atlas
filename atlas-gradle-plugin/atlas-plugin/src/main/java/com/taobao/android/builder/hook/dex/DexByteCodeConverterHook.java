@@ -258,6 +258,12 @@ public class DexByteCodeConverterHook extends DexByteCodeConverter {
 
         } else {
 
+            if (!variantContext.getBuildType().getMultiDexConfig().isFastMultiDex()) {
+                super.convertByteCode(inputFile, outDexFolder, true, mainDexList, dexOptions, processOutputHandler, minSdkVersion);
+                return;
+            }
+
+
             if (mainDexList != null && !mainDexList.exists()) {
                 generateMainDexList(mainDexList);
             }
@@ -357,16 +363,15 @@ public class DexByteCodeConverterHook extends DexByteCodeConverter {
             mainforkJoinPool = new ForkJoinPool();
             if (variantContext.getBuildType().getMultiDexConfig().isFastMultiDex()) {
                 atlasDexArchiveMerger = new AtlasDexArchiveMerger(mainforkJoinPool);
-            }else {
-                atlasDexArchiveMerger = new DxDexArchiveMerger(new DxContext(),mainforkJoinPool);
-            }
-            if (!variantContext.getAtlasExtension().getTBuildConfig().getMergeBundlesDex()) {
-                try {
-                    atlasDexArchiveMerger.mergeDexArchives(dexPaths, outDexFolder.toPath(), mainDexList ==null? null:mainDexList.toPath(), DexingType.LEGACY_MULTIDEX);
-                } catch (DexArchiveMergerException e) {
-                    throw new ProcessException(e);
+                if (!variantContext.getAtlasExtension().getTBuildConfig().getMergeBundlesDex()) {
+                    try {
+                        atlasDexArchiveMerger.mergeDexArchives(dexPaths, outDexFolder.toPath(), mainDexList ==null? null:mainDexList.toPath(), DexingType.LEGACY_MULTIDEX);
+                    } catch (DexArchiveMergerException e) {
+                        throw new ProcessException(e);
+                    }
                 }
             }
+
 
         }
 
@@ -389,13 +394,14 @@ public class DexByteCodeConverterHook extends DexByteCodeConverter {
         }
 
         if (variantContext.getAtlasExtension().getTBuildConfig().getMergeBundlesDex()) {
-            try {
-                atlasDexArchiveMerger.mergeDexArchives(dexPaths, outDexFolder.toPath(), null, DexingType.LEGACY_MULTIDEX);
-            } catch (DexArchiveMergerException e) {
-                e.printStackTrace();
-            } finally {
+                try {
+                    atlasDexArchiveMerger.mergeDexArchives(dexPaths, outDexFolder.toPath(), null, DexingType.LEGACY_MULTIDEX);
+                } catch (DexArchiveMergerException e) {
+                    e.printStackTrace();
+                } finally {
 
-            }
+                }
+
         }
 
         if (tempDexFolder != null && tempDexFolder.exists()) {
