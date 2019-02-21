@@ -586,17 +586,18 @@ public class AtlasProguardTransform extends ProGuardTransform {
             @NonNull ClassPath classPath, @NonNull File file, @Nullable List<String> filter) {
         appVariantContext.getProject().getLogger().info("inputJar :" + file.getAbsolutePath());
 
-        if (file.isDirectory()) {
-            super.inputJar(classPath, file, filter);
-        } else {
-            if (AtlasBuildContext.atlasMainDexHelperMap.get(appVariantContext.getVariantName()).inMainDex(file) ||!appVariantContext.getAtlasExtension().isAtlasEnabled()||AtlasBuildContext.androidDependencyTrees.get(appVariantContext.getVariantName()).getAwbBundles().size() == 0) {
-                super.inputJar(classPath, file, filter);
-            } else if (appVariantContext.getScope().getGlobalScope().getAndroidBuilder().getBootClasspath(true).contains(file)) {
-                super.inputJar(classPath, file, filter);
-            } else if (AtlasBuildContext.atlasMainDexHelperMap.get(appVariantContext.getVariantName()).getInputDirs().contains(file)) {
-                super.inputJar(classPath, file, filter);
-
-            }
-        }
+        super.inputJar(classPath,file,filter);
+//        if (file.isDirectory()) {
+//            super.inputJar(classPath, file, filter);
+//        } else {
+//            if (AtlasBuildContext.atlasMainDexHelperMap.get(appVariantContext.getVariantName()).inMainDex(file) ||!appVariantContext.getAtlasExtension().isAtlasEnabled()||AtlasBuildContext.androidDependencyTrees.get(appVariantContext.getVariantName()).getAwbBundles().size() == 0) {
+//                super.inputJar(classPath, file, filter);
+//            } else if (appVariantContext.getScope().getGlobalScope().getAndroidBuilder().getBootClasspath(true).contains(file)) {
+//                super.inputJar(classPath, file, filter);
+//            } else if (AtlasBuildContext.atlasMainDexHelperMap.get(appVariantContext.getVariantName()).getInputDirs().contains(file)) {
+//                super.inputJar(classPath, file, filter);
+//
+//            }
+//        }
     }
 }
