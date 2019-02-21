@@ -13,6 +13,7 @@ import org.objectweb.asm.tree.LineNumberNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -21,9 +22,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * 描述:
  * 作者:zhayu.ll
  */
-public class TBIncrementalSupportVisitor extends IncrementalVisitor {
+public class TBIncrementalSupportVisitor extends TBIncrementalVisitor {
 
     private boolean disableRedirectionForClass = false;
+
 
 
     public void setPatchInitMethod(boolean patchInitMethod) {
@@ -33,12 +35,44 @@ public class TBIncrementalSupportVisitor extends IncrementalVisitor {
     private boolean patchInitMethod = false;
 
 
+    public boolean isSupportAddCallSuper() {
+        return supportAddCallSuper;
+    }
+
+    public void setSupportAddCallSuper(boolean supportAddCallSuper) {
+        this.supportAddCallSuper = supportAddCallSuper;
+    }
+
+    private boolean supportAddCallSuper = false;
+
+    private List<MethodNode>methodNodes = new ArrayList<>();
+
+    private List<String>visitSuperMethods = new ArrayList<>();
+
+
+    public boolean isSupportEachMethod() {
+        return supportEachMethod;
+    }
+
+    public void setSupportEachMethod(boolean supportEachMethod) {
+        this.supportEachMethod = supportEachMethod;
+    }
+
+    private boolean supportEachMethod = false;
+
+
+
     public TBIncrementalSupportVisitor(
             @NonNull ClassNode classNode,
             @NonNull List<ClassNode> parentNodes,
             @NonNull ClassVisitor classVisitor,
             @NonNull ILogger logger) {
         super(classNode, parentNodes, classVisitor, logger);
+        classNode.methods.forEach((Consumer<MethodNode>) o -> {
+            if (!o.name.equals(ByteCodeUtils.CONSTRUCTOR) &&! o.name.equals(ByteCodeUtils.CLASS_INITIALIZER)) {
+                methodNodes.add(o);
+            }
+        });
     }
 
     /**
@@ -54,9 +88,23 @@ public class TBIncrementalSupportVisitor extends IncrementalVisitor {
         visitedClassName = name;
         visitedSuperName = superName;
 
-        super.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC
-                        | Opcodes.ACC_VOLATILE | Opcodes.ACC_SYNTHETIC | Opcodes.ACC_TRANSIENT,
-                "$change", getRuntimeTypeName(CHANGE_TYPE), null, null);
+        if (supportEachMethod){
+            methodNodes.forEach(methodNode -> {
+                String fullName = methodNode.name + "." + methodNode.desc;
+                super.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC
+                                | Opcodes.ACC_VOLATILE | Opcodes.ACC_SYNTHETIC | Opcodes.ACC_TRANSIENT,
+                        "$ipChange"+"$"+ fullName.hashCode(), getRuntimeTypeName(ALI_CHANGE_TYPE), null, null);
+            });
+
+        }else {
+//            super.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC
+//                            | Opcodes.ACC_VOLATILE | Opcodes.ACC_SYNTHETIC | Opcodes.ACC_TRANSIENT,
+//                    "$ipChange", getRuntimeTypeName(ALI_CHANGE_TYPE), null, null);
+
+            super.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC
+                            | Opcodes.ACC_TRANSIENT |Opcodes.ACC_SYNTHETIC,
+                    "$ipChange", getRuntimeTypeName(ALI_CHANGE_TYPE), null, null);
+        }
         access = transformClassAccessForInstantRun(access);
         super.visit(version, access, name, signature, superName, interfaces);
     }
@@ -70,7 +118,7 @@ public class TBIncrementalSupportVisitor extends IncrementalVisitor {
 
     @Override
     public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-        if (desc.equals(DISABLE_ANNOTATION_TYPE.getDescriptor())) {
+        if (desc.equals(ALI_DISABLE_ANNOTATION_TYPE.getDescriptor())) {
             disableRedirectionForClass = true;
         }
         return super.visitAnnotation(desc, visible);
@@ -101,8 +149,26 @@ public class TBIncrementalSupportVisitor extends IncrementalVisitor {
                 checkNotNull(
                         getMethodByNameInClass(name, desc, classNode),
                         "Method found by visitor but not in the pre-parsed class node.");
-
         // does the method use blacklisted APIs.
+
+        if (!supportAddCallSuper) {
+            method.instructions.accept(new MethodVisitor(api) {
+                @Override
+                public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
+                    if (opcode == Opcodes.INVOKESPECIAL && !owner.equals(visitedClassName)) {
+                        visitSuperMethods.add(name + "." + desc);
+                    }
+                    super.visitMethodInsn(opcode, owner, name, desc, itf);
+                }
+            });
+        }
+
+        //this is method generaged by visualMachine
+
+        if ((access & Opcodes.ACC_SYNTHETIC) != 0){
+            return defaultVisitor;
+        }
+
         boolean hasIncompatibleChange = InstantRunMethodVerifier.verifyMethod(method)
                 != InstantRunVerifierStatus.COMPATIBLE;
 
@@ -137,14 +203,14 @@ public class TBIncrementalSupportVisitor extends IncrementalVisitor {
                         method.instructions.insert(constructor.loadThis,
                                 new LineNumberNode(constructor.lineForLoad, start));
                     }
-                    mv.addRedirection(new ConstructorRedirection(start, constructor, args));
+                    mv.addRedirection(new TBConstructorRedirection(start, constructor, args));
 
                 } else {
                     return defaultVisitor;
                 }
 
             } else {
-                mv.addRedirection(new MethodRedirection(
+                mv.addRedirection(new TBMethodRedirection(
                         new LabelNode(mv.getStartLabel()),
                         name + "." + desc,
                         args,
@@ -209,6 +275,7 @@ public class TBIncrementalSupportVisitor extends IncrementalVisitor {
         private final List<Redirection> redirections;
         private final Map<Label, Redirection> resolvedRedirections;
         private final Label start;
+        private String fullName;
 
         public ISMethodVisitor(MethodVisitor mv, int access, String name, String desc) {
             super(Opcodes.ASM5, mv, access, name, desc);
@@ -218,6 +285,8 @@ public class TBIncrementalSupportVisitor extends IncrementalVisitor {
             this.args = new ArrayList<>(Arrays.asList(Type.getArgumentTypes(desc)));
             this.start = new Label();
             boolean isStatic = (access & Opcodes.ACC_STATIC) != 0;
+             fullName = name + "." + desc;
+
             // if this is not a static, we add a fictional first parameter what will contain the
             // "this" reference which can be loaded with ILOAD_0 bytecode.
             if (!isStatic) {
@@ -227,7 +296,7 @@ public class TBIncrementalSupportVisitor extends IncrementalVisitor {
 
         @Override
         public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-            if (desc.equals(DISABLE_ANNOTATION_TYPE.getDescriptor())) {
+            if (desc.equals(ALI_DISABLE_ANNOTATION_TYPE.getDescriptor())) {
                 disableRedirection = true;
             }
             return super.visitAnnotation(desc, visible);
@@ -252,9 +321,14 @@ public class TBIncrementalSupportVisitor extends IncrementalVisitor {
                 }
 
                 super.visitLabel(start);
-                change = newLocal(CHANGE_TYPE);
-                visitFieldInsn(Opcodes.GETSTATIC, visitedClassName, "$change",
-                        getRuntimeTypeName(CHANGE_TYPE));
+                change = newLocal(ALI_CHANGE_TYPE);
+                if (supportEachMethod){
+                    visitFieldInsn(Opcodes.GETSTATIC, visitedClassName, "$ipChange"+"$"+fullName.hashCode(),
+                            getRuntimeTypeName(ALI_CHANGE_TYPE));
+                }else {
+                    visitFieldInsn(Opcodes.GETSTATIC, visitedClassName, "$ipChange",
+                            getRuntimeTypeName(ALI_CHANGE_TYPE));
+                }
                 storeLocal(change);
 
                 redirectAt(start);
@@ -305,7 +379,7 @@ public class TBIncrementalSupportVisitor extends IncrementalVisitor {
     /**
      * Decorated {@link MethodNode} that maintains a reference to the class declaring the method.
      */
-    private static class MethodReference {
+    public static class MethodReference {
         final MethodNode method;
         final ClassNode owner;
 
@@ -338,9 +412,29 @@ public class TBIncrementalSupportVisitor extends IncrementalVisitor {
      * </code>
      */
     private void createAccessSuper() {
+
+        final Map<String, MethodReference> uniqueMethods = new HashMap<>();
+        if (parentNodes.isEmpty()) {
+            // if we cannot determine the parents for this class, let's blindly add all the
+            // method of the current class as a gateway to a possible parent version.
+            addAllNewMethods(classNode, classNode, uniqueMethods,null);
+        } else {
+            // otherwise, use the parent list.
+
+            for (ClassNode parentNode : parentNodes) {
+
+                addAllNewMethods(classNode, parentNode, uniqueMethods,supportAddCallSuper? null:visitSuperMethods);
+            }
+        }
+
+        if (uniqueMethods.size() == 0){
+            return;
+        }
+
+
         int access = Opcodes.ACC_STATIC | Opcodes.ACC_PUBLIC
                 | Opcodes.ACC_SYNTHETIC | Opcodes.ACC_VARARGS;
-        Method m = new Method("access$super", "(L" + visitedClassName
+        Method m = new Method("ipc$super", "(L" + visitedClassName
                 + ";Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/Object;");
         MethodVisitor visitor = super.visitMethod(access,
                 m.getName(),
@@ -352,17 +446,6 @@ public class TBIncrementalSupportVisitor extends IncrementalVisitor {
         // Gather all methods from itself and its superclasses to generate a giant access$super
         // implementation.
         // This will work fine as long as we don't support adding methods to a class.
-        final Map<String, MethodReference> uniqueMethods = new HashMap<>();
-        if (parentNodes.isEmpty()) {
-            // if we cannot determine the parents for this class, let's blindly add all the
-            // method of the current class as a gateway to a possible parent version.
-            addAllNewMethods(classNode, classNode, uniqueMethods);
-        } else {
-            // otherwise, use the parent list.
-            for (ClassNode parentNode : parentNodes) {
-                addAllNewMethods(classNode, parentNode, uniqueMethods);
-            }
-        }
 
         new StringSwitch() {
             @Override
@@ -392,7 +475,7 @@ public class TBIncrementalSupportVisitor extends IncrementalVisitor {
                 }
                 String parentName = findParentClassForMethod(methodRef);
                 logger.verbose(
-                        "Generating access$super for %1$s recev %2$s",
+                        "Generating ipc$super for %1$s recev %2$s",
                         methodRef.method.name,
                         parentName);
 
@@ -466,7 +549,7 @@ public class TBIncrementalSupportVisitor extends IncrementalVisitor {
         int access = Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC;
 
         Method m = new Method(ByteCodeUtils.CONSTRUCTOR,
-                ConstructorRedirection.DISPATCHING_THIS_SIGNATURE);
+                ALI_DISPATCHING_THIS_SIGNATURE);
         MethodVisitor visitor = super.visitMethod(0, m.getName(), m.getDescriptor(), null, null);
         final GeneratorAdapter mv = new GeneratorAdapter(access, m, visitor);
 
@@ -652,23 +735,33 @@ public class TBIncrementalSupportVisitor extends IncrementalVisitor {
      * @param instrumentedClass class that is being visited
      * @param superClass        the class to save all new methods from
      * @param methods           the methods already encountered in the ClassNode hierarchy
+     * @param visitSuperMethods
      * @see ClassNode#methods
      */
-    private static void addAllNewMethods(
+    public static void addAllNewMethods(
             ClassNode instrumentedClass,
             ClassNode superClass,
-            Map<String, MethodReference> methods) {
+            Map<String, MethodReference> methods, List<String> visitSuperMethods) {
+
         //noinspection unchecked
+        if (superClass.name.equals("java/lang/Object")){
+            return;
+        }
         for (MethodNode method : (List<MethodNode>) superClass.methods) {
-            if (method.name.equals(ByteCodeUtils.CONSTRUCTOR) || method.name.equals("<clinit>")) {
+            if (method.name.equals(ByteCodeUtils.CONSTRUCTOR) || method.name.equals(ByteCodeUtils.CLASS_INITIALIZER)) {
                 continue;
             }
             String name = method.name + "." + method.desc;
             if (isAccessCompatibleWithInstantRun(method.access)
                     && !methods.containsKey(name)
                     && (method.access & Opcodes.ACC_STATIC) == 0
-                    && isCallableFromSubclass(method, superClass, instrumentedClass)) {
-                methods.put(name, new MethodReference(method, superClass));
+                    && isCallableFromSubclass(method, superClass, instrumentedClass)
+                    ) {
+                if (visitSuperMethods == null){
+                    methods.put(name, new MethodReference(method, superClass));
+                }else if (visitSuperMethods.contains(name)) {
+                    methods.put(name, new MethodReference(method, superClass));
+                }
             }
         }
     }
