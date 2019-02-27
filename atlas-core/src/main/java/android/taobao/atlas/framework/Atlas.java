@@ -282,7 +282,6 @@ public class Atlas {
         if(application==null){
             throw new RuntimeException("application is null");
         }
-        Log.e("Atlas","Atlas patch sucecess!");
         ApplicationInfo app_info = application.getApplicationInfo();
         sAPKSource = app_info.sourceDir;
         boolean DEBUG = (app_info.flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;

@@ -256,6 +256,6 @@ jar {
     from zipTree("libs/libarsc.jar")
 }
 
-version = '3.0.1-rc84-fix8-perf'
+version = '3.0.1-rc84-fix9-perf'
 
 
