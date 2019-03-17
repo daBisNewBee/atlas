@@ -33,8 +33,10 @@ class Constants {
     static final PATH_VERSION_FILE = "dexPatch.version"
 }
 
-task tesetm << {
-    wrapDexPatchFile(true)
+task tesetm {
+    doLast{
+        wrapDexPatchFile(true)
+    }
 }
 
 def wrapDexPatchFile(boolean debug) {

@@ -1,3 +1,36 @@
+
+动态部署的几个操作步骤记录：
+
+1. ./gradlew clean assembleDebug
+
+# 必须发布！关系到生成的patch使用的基线ap版本
+2. ./gradlew publishToMavenLocal
+
+3. adb uninstall com.taobao.demo
+
+4. adb install app/build/outputs/apk/debug/app-debug.apk
+
+5. do some change.
+/*
+ <string name="hello_blank_fragment">this is bbbbb fragment of firstBundle.
+ this is patch.</string>
+
+ firbundle.grale:
+ verison: 1.0.2 -> 1.0.3
+*/
+
+6. 生成patch等文件
+./gradlew clean assembleDebug -DapVersion=1.0.0 -DversionName=1.0.1
+
+7. 推送到手机sdcard
+adb push app/build/outputs/tpatch-debug/update-1.0.0.json /sdcard/Android/data/com.taobao.demo/cache/update-1.0.0.json
+adb push app/build/outputs/tpatch-debug/patch-1.0.1@1.0.0.tpatch /sdcard/Android/data/com.taobao.demo/cache/patch-1.0.1@1.0.0.tpatch
+
+8. demo应用"动态部署"
+
+#####################
+
+
 1、 app的build.gradle的语句"version = getEnvValue("versionName", "1.0.0");"中修改想要生成的app的versionName（默认为1.0.0）
 
     app目录下执行../gradlew clean assembleDebug 生成apk  (windows 环境的命令为 ..\gradlew.bat clean assembleDebug  以下类同)

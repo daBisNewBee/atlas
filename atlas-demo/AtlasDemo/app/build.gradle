@@ -40,17 +40,17 @@ android {
 
     }
     flavorDimensions 'api'
-        productFlavors{
-                productA{
-                    applicationId "com.crazyman.product.a"
-                    versionName "version-a-1.0"
-                }
-
-                productB{
-                    applicationId "com.crazyman.product.b"
-                    versionName "version-b-1.0"
-                }
-            }
+    // 只编译出一个默认版本就行
+//    productFlavors{
+//        productA{
+//            applicationId "com.crazyman.product.a"
+//            versionName "version-a-1.0"
+//        }
+//        productB{
+//            applicationId "com.crazyman.product.b"
+//            versionName "version-b-1.0"
+//        }
+//    }
 
     dataBinding {
         enabled = true
@@ -122,6 +122,8 @@ atlas {
 
 
 dependencies {
+    // 默认包不携带该库，在mergeDex的时候，远程DexMergeService会因为找不到该类而超时，merge失败，动态部署失败！
+    implementation "io.reactivex.rxjava2:rxjava:2.2.7"
 
     compile fileTree(dir: 'libs', include: ['*.jar'])
 
@@ -188,15 +190,24 @@ apply plugin: 'maven-publish'
 
 publishing {
     repositories {
+        /*
+        * 实际位置：
+        * /Users/user/.m2/repository
+        * 比如：
+        * /Users/user/.m2/repository/com/taobao/android/atlasdemo/AP-debug/1.0.0
+        * */
         mavenLocal()
     }
 }
 
+// ./gradlew publishToMavenLocal
 publishing {
     publications {
         maven(MavenPublication) {
-            artifact "${project.buildDir}/outputs/apk/debug/${project.name}-debug.ap"
+            // "productFlavors"打开时，这里需要区分
+//            artifact "${project.buildDir}/outputs/apk/productA/debug/${project.name}-productA-debug.ap"
             artifactId "AP-debug"
+            artifact "${project.buildDir}/outputs/apk/debug/${project.name}-debug.ap"
         }
     }
 }
