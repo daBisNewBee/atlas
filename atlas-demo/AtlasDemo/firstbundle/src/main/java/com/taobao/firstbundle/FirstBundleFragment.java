@@ -21,7 +21,8 @@ public class FirstBundleFragment extends Fragment implements IRemote {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_blank, container, false);
-
+        Log.v("bb", "this is add by dexpatch. second patch.");
+        Log.v("bb", "create Sexy:" + new Sexy());
 
         return rootView;
     }

@@ -1,0 +1,106 @@
+/*
+DexPatch：
+特点目的：
+1. 主要用于线上故障，机动性较"动态部署"强
+2. 针对Bundle级别的动态修复（主dex可以认为是一个bundle）
+
+参考"DexPatch使用示例"：
+https://alibaba.github.io/atlas/update/dexpatch_use_guide.html
+*/
+
+dexPatch 的几个操作步骤：
+1. 发布基线AP版本（若未曾发布）
+./gradlew clean assembleDebug
+./gradlew publishToMavenLocal
+
+2. 打patch
+修改代码，并修改对应bundle的version:
+比如：
+在firstBundle中新增：（注意：修改要内聚！模块之间的接口变更会影响使用！）
+Log.v("bb", "this is add by dexpatch.");
+verison: 1.0.2 -> 1.0.3
+
+生成dexPatch包:
+./gradlew clean assembleDebug -DapVersion=1.0.0 -DversionName=1.0.0
+（原则上，此处的版本表示基线app的版本号，一般不变）
+
+3. 部署Patch
+adb push app/build/outputs/tpatch-debug/1.0.0@1.0.0.tpatch  /sdcard/Android/data/com.taobao.demo/cache/
+adb push app/build/outputs/tpatch-debug/dexpatch-1.0.0.json /sdcard/Android/data/com.taobao.demo/cache/
+
+4. 执行"dex_patch模拟"
+
+其中：
+1. 最终产物清单：
+最终patch：1.0.0@1.0.0.tpatch
+最终配置：dexpatch-1.0.0.json（由原始配置"patchs.json"得来，经过"dexPatchWraper.gradle"的处理）
+
+2. "1.0.0@1.0.0.tpatch"实质：
+（当前代码和参考ap(1.0.0)diff的产物，是个zip文件，解压开就是diff的代码。）
+是个压缩包，包括了有修改的class文件。
+比如：
+userdeMacBook-Pro:tpatch-debug user$ unzip 1.0.0\@1.0.0.tpatch -d tmp
+Archive:  1.0.0@1.0.0.tpatch
+  inflating: tmp/libcom_taobao_firstbundle/classes.dex
+  inflating: tmp/libcom_taobao_secondbundle/classes.dex
+反编译dex：
+$ d2j-dex2jar.sh classes.dex
+dex2jar classes.dex -> ./classes-dex2jar.jar
+jd-gui查看"classes-dex2jar.jar"：
+包括两个class：
+FirstBundleFragment.class(当前有修改)
+Sexy.class(新增的类)
+secondbundle下的类似。
+
+3. 配置清单字段解释：
+dexpatch-1.0.0.json：（"+"表示相比patchs.json有新增的字段）
+
+{
+  "baseVersion": "1.0.0",
+  "diffBundleDex": true,
+  "patches": [
+    {
+      "bundles": [
+        {
+          "artifactId": "firstbundle",
+          "dependency": [
+            "com.taobao.publicBundle"
+          ],
+          "inherit": false,
+          "name": "com.taobao.firstbundle",
+          "newBundle": false,
+          "patchType": 1,
+          "pkgName": "com.taobao.firstbundle",
+          "reset": false,
+          "srcUnitTag": "34wo1qldy4grb",
+          "unitTag": "3dchemndah072",
+          "version": "1.0.6",
+          // + 重要。客户端根据此判断是否要merge，各个bundle对应一个
+          "dexpatchVersion": "4",
+          "isMainDex": false
+        },
+        {
+          "artifactId": "secondbundle",
+          "dependency": [],
+          "inherit": false,
+          "name": "com.taobao.secondbundle",
+          "newBundle": false,
+          "patchType": 1,
+          "pkgName": "com.taobao.secondbundle",
+          // 重要。回滚标志，该bundle会回滚到dexpatch前的版本
+          "reset": false,
+          "srcUnitTag": "vwe060e03l84",
+          "unitTag": "37vkydoflpnfk",
+          "version": "1.0.1",
+          "dexpatchVersion": "4",
+          "isMainDex": false
+        }
+      ],
+      "fileName": "1.0.0@1.0.0.tpatch",
+      "patchVersion": "1.0.0",
+      "targetVersion": "1.0.0",
+      // + 重要。区分配置是动态部署还是 dexpatch
+      "dexPatch": true
+    }
+  ]
+}

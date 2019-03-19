@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.taobao.atlas.remote.IRemote;
 import android.taobao.atlas.remote.IRemoteTransactor;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -82,7 +83,7 @@ public class PlusOneFragment extends Fragment implements IRemote {
                 startActivity(intent);
             }
         });
-
+        Log.v("bb", "PlusOneFragment onCreateView.");
         return view;
     }
 
