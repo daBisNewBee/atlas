@@ -144,19 +144,21 @@ public class MainActivity extends AppCompatActivity
 //            // Handle the camera action
 //        }
 //        else
+        // 动态部署模拟
             if (id == R.id.nav_slideshow) {
             Intent intent = new Intent();
             intent.setClassName(this,"com.taobao.demo.UpdateDemoActivity");
             startActivity(intent);
 
         } else if (id == R.id.nav_manage) {
-
+        // 远程组件模拟
             Intent intent = new Intent();
                 intent.setPackage(getPackageName());
             intent.setClassName(this,"com.taobao.demo.RemoteDemoActivity");
             startActivity(intent);
 
         } else if (id == R.id.awo_manager) {
+                // 单模块调试模拟
             Dialog dialog = new Dialog(this,"单bundle调试",
                     "1、安装设备且连接电脑成功\n\n"+
                      "2、修改一个bundle工程的代码或者自由（设置生效的标识）\n\n"+
@@ -166,6 +168,7 @@ public class MainActivity extends AppCompatActivity
 
 
         } else if (id == R.id.nav_dex_patch) {
+                // dex_patch模拟
             new AsyncTask<Void, Void, Boolean>() {
                 @Override
                 protected Boolean doInBackground(Void... voids) {

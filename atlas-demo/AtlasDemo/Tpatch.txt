@@ -28,6 +28,35 @@ adb push app/build/outputs/tpatch-debug/patch-1.0.1@1.0.0.tpatch /sdcard/Android
 
 8. demo应用"动态部署"
 
+
+注意：
+（前提：修改firstBundle中的字符串后进行的部署）
+1. 动态部署需要的几个最终产物：
+update-1.0.0.json
+patch-1.0.1@1.0.0.tpatch
+
+其中，tpatch是个压缩文件，解压后：
+userdeMacBook-Pro:tpatch-debug user$ unzip patch-1.0.1\@1.0.0.tpatch -d tmp
+Archive:  patch-1.0.1@1.0.0.tpatch
+  inflating: tmp/libcom_taobao_firstbundle/resources.arsc
+  inflating: tmp/patchInfo
+  inflating: tmp/libcom_taobao_maindex.so
+
+需要注意与dexPatch下的不同，dexPatch只有class文件
+
+libcom_taobao_maindex.so也是一个压缩文件：
+userdeMacBook-Pro:tmp user$ cp libcom_taobao_maindex.so libcom_taobao_maindex.zip
+userdeMacBook-Pro:tmp user$ unzip libcom_taobao_maindex.zip -d libcom_taobao_maindex
+Archive:  libcom_taobao_maindex.zip
+  inflating: libcom_taobao_maindex/resources.arsc
+  inflating: libcom_taobao_maindex/AndroidManifest.xml
+  inflating: libcom_taobao_maindex/classes.dex
+  inflating: libcom_taobao_maindex/assets/bundleInfo-1.0.1.json
+
+反编译dex后的文件：(与dexPatch模式下不同)
+AtlasBundleInfoGenerator.class
+FrameworkProperties.class
+
 #####################
 
 
