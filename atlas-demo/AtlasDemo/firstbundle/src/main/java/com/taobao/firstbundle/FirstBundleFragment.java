@@ -18,6 +18,8 @@ public class FirstBundleFragment extends Fragment implements IRemote {
         Log.v("bb", "this is add by dexpatch. second patch.");
         Log.v("bb", "create Sexy:" + new Sexy());
 
+        Log.v("bb", "add by tpatch.");
+
         return rootView;
     }
 

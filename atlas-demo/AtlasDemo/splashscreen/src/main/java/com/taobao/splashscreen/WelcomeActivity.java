@@ -20,6 +20,8 @@ public class WelcomeActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_welcome);
 
+        Log.v("bb", "WelcomeActivity onCreate. add by tpatch.");
+
         mContentView = findViewById(R.id.fullscreen_content);
 
 

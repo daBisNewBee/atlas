@@ -1,0 +1,50 @@
+diff --git a/atlas-demo/AtlasDemo/firstbundle/build.gradle b/atlas-demo/AtlasDemo/firstbundle/build.gradle
+index 151171f1..fed77358 100644
+--- a/atlas-demo/AtlasDemo/firstbundle/build.gradle
++++ b/atlas-demo/AtlasDemo/firstbundle/build.gradle
+@@ -12,7 +12,7 @@ atlas {
+     }
+ }
+ group = 'com.atlas.demo'
+-version = '1.0.1'
++version = '1.0.2'
+ 
+ 
+ android {
+diff --git a/atlas-demo/AtlasDemo/firstbundle/src/main/java/com/taobao/firstbundle/FirstBundleFragment.java b/atlas-demo/AtlasDemo/firstbundle/src/main/java/com/taobao/firstbundle/FirstBundleFragment.java
+index 84612599..4dd362b7 100644
+--- a/atlas-demo/AtlasDemo/firstbundle/src/main/java/com/taobao/firstbundle/FirstBundleFragment.java
++++ b/atlas-demo/AtlasDemo/firstbundle/src/main/java/com/taobao/firstbundle/FirstBundleFragment.java
+@@ -18,6 +18,8 @@ public class FirstBundleFragment extends Fragment implements IRemote {
+         Log.v("bb", "this is add by dexpatch. second patch.");
+         Log.v("bb", "create Sexy:" + new Sexy());
+ 
++        Log.v("bb", "add by tpatch.");
++
+         return rootView;
+     }
+ 
+diff --git a/atlas-demo/AtlasDemo/splashscreen/build.gradle b/atlas-demo/AtlasDemo/splashscreen/build.gradle
+index 1226bcd8..a84b1769 100644
+--- a/atlas-demo/AtlasDemo/splashscreen/build.gradle
++++ b/atlas-demo/AtlasDemo/splashscreen/build.gradle
+@@ -1,7 +1,7 @@
+ apply plugin: 'com.android.library'
+ 
+ group = 'com.atlas.demo'
+-version = '1.0.1'
++version = '1.0.2'
+ 
+ android {
+     compileSdkVersion 25
+diff --git a/atlas-demo/AtlasDemo/splashscreen/src/main/java/com/taobao/splashscreen/WelcomeActivity.java b/atlas-demo/AtlasDemo/splashscreen/src/main/java/com/taobao/splashscreen/WelcomeActivity.java
+index 6c790e4a..17c4276f 100644
+--- a/atlas-demo/AtlasDemo/splashscreen/src/main/java/com/taobao/splashscreen/WelcomeActivity.java
++++ b/atlas-demo/AtlasDemo/splashscreen/src/main/java/com/taobao/splashscreen/WelcomeActivity.java
+@@ -20,6 +20,8 @@ public class WelcomeActivity extends AppCompatActivity {
+ 
+         setContentView(R.layout.activity_welcome);
+ 
++        Log.v("bb", "WelcomeActivity onCreate. add by tpatch.");
++
+         mContentView = findViewById(R.id.fullscreen_content);
