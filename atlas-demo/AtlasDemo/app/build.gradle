@@ -91,6 +91,7 @@ atlas {
     atlasEnabled true
     tBuildConfig {
         autoStartBundles = ['com.taobao.firstbundle'] //自启动bundle配置
+        // 指定远程bundle，不会打入apk（独立打包，用于后续的动态下发）
         outOfApkBundles = ['remotebundle']
         preLaunch = 'com.taobao.demo.DemoPreLaunch'
         classInject false
@@ -127,10 +128,31 @@ dependencies {
 
     compile fileTree(dir: 'libs', include: ['*.jar'])
 
+    /*
+    * compile:(打入dex的代码)
+    * */
     compile project(':middlewarelibrary')
     compile project(':splashscreen')
     compile project(':databindinglibrary')
     compile project(':activitygroupcompat')
+
+    /*
+    * bundleCompile:(随包发布但是不打入dex的代码)
+    * atlas 的配置项，表示apk的bundle依赖，即apk是由这些bundle共同组成。
+    * bundle中的代码不会打入dex中去，bundle将以libxxx.so文件的形式，放在apk的lib目录下，随包发布
+    *
+    * 比如，app-debug-apk/lib/armeabi下的文件：
+    * userdeMacBook-Pro:armeabi user$ ls -l
+      total 624
+      -rw-r--r--  1 user  staff  70152  3 23 21:43 libPatchLibrary.so
+      -rw-r--r--  1 user  staff  41739  3 23 21:43 libcom_taobao_databindbundle.so
+      -rw-r--r--  1 user  staff  47472  3 23 21:43 libcom_taobao_firstbundle.so
+      -rw-r--r--  1 user  staff  35963  3 23 21:43 libcom_taobao_publicBundle.so
+      -rw-r--r--  1 user  staff  47760  3 23 21:43 libcom_taobao_secondbundle.so
+      -rw-r--r--  1 user  staff  17972  3 23 21:43 libdalvikhack.so
+      -rw-r--r--  1 user  staff  21920  3 23 21:43 libdalvikpatch.so
+      -rw-r--r--  1 user  staff  17892  3 23 21:43 libdexinterpret.so
+    * */
     bundleCompile project(':firstbundle')
     bundleCompile project(':secondbundle')
     bundleCompile project(':remotebundle')

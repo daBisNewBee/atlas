@@ -32,7 +32,16 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
+    // 会将secondbundle和secondbundlelibrary的打在一个同一个dex中，
+    // 加上两者的资源，成为一个bundle
     compile project(":secondbundlelibrary")
+    /*
+    * providedCompile:
+    *
+    * 主dex中已经打入了必要的公用代码(appcompat、middlewarelibrary)，
+    * 在runtime时，atlas框架会自动找到主dex中的class使用，
+    * 所以secondbundl就不需要在重复打入
+    * */
     providedCompile 'com.android.support:appcompat-v7:25.1.0'
     providedCompile 'com.android.support:support-v4:25.3.0'
 
