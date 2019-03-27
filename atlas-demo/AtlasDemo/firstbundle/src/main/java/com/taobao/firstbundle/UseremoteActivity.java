@@ -20,6 +20,41 @@ import android.widget.Toast;
 
 import com.taobao.middleware.ICaculator;
 
+/**
+ *
+ * 跨bundle(其实也是跨ClassLoader)调用组件的一般过程：
+ * 1. 根据key获得所在的bundle名称（根据注册在manifest中的"meta-data"映射关系）
+ * 2. 检查并安装对应bundle（若未安装）
+ * 3. 创建组件并返回组件对象对应实例
+ *   3.1  RemoteView：
+ *        传回的"iRemoteContext"可以直接view使用，因为其本身就是一个framelayout，
+ *        而远端view已经被add进去。
+ *        注意："使用方不要通过findViewByID或者getChildAt等viewGroup的public
+ *        方法尝试获取目标view并进行操作，RemoteView应该被当做View而不是ViewGroup"
+ *   3.2  RemoteFragment：
+ *        传回的"iRemote"可直接作为fragment使用
+ *        TODO:"RemoteFragment的使用方拿到的仅仅是目标fragment的代理" 如何理解？
+ *   3.3  RemoteTransactor：
+ *        通过iRemote.getRemoteInterface获取远端ICaculator实例
+ *        注意：ICaculator所在的"middlewarelibrary"
+ *        只有在主"app"中才被compile，其他bundle中均是providedCompile
+ *
+ *  其中，
+ *  1. 远端组件实例是由各自的"BundleClassLoader"加载的，BundleClassLoader如何获取？
+ *  EmbeddedActivity.getClassLoader
+ *  2. 所有与目标重用组件的通信，均以"Remote机制"进行
+ *
+ * 支持的组件包括：（载体组件）
+ * 1. Fragment(RemoteFragment)
+ * 2. View(RemoteView)
+ * 3. func(RemoteTransactor)
+ *
+ * 需要共享的组件需要继承"IRemote"，
+ * 为了方便将其实例缓存在载体组件的成员变量中：
+ * 比如，
+ *  MyRichFrameLayout、MyRichFragment、SecondBundleCaculator
+ *
+ */
 public class UseremoteActivity extends AppCompatActivity {
 
     @Override
