@@ -11,7 +11,7 @@ android {
     buildToolsVersion '26.0.2'
 
     defaultConfig {
-        minSdkVersion 14
+        minSdkVersion 21
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
@@ -28,4 +28,5 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     providedCompile project(':middlewarelibrary')
+    providedCompile project(path: ':atlas_core')
 }

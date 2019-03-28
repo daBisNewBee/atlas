@@ -66,7 +66,8 @@ public class UseremoteActivity extends AppCompatActivity {
         findViewById(R.id.btn_view).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                RemoteFactory.requestRemote(RemoteView.class, UseremoteActivity.this, new Intent("atlas.view.intent.action.SECOND_RICH"),
+//                RemoteFactory.requestRemote(RemoteView.class, UseremoteActivity.this, new Intent("atlas.view.intent.action.SECOND_RICH"),
+                RemoteFactory.requestRemote(RemoteView.class, UseremoteActivity.this, new Intent("atlas.view.intent.action.myremoteView"),
                         new RemoteFactory.OnRemoteStateListener<RemoteView>() {
                             @Override
                             public void onRemotePrepared(RemoteView iRemoteContext) {
@@ -86,7 +87,8 @@ public class UseremoteActivity extends AppCompatActivity {
         findViewById(R.id.btn_frag).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                RemoteFactory.requestRemote(RemoteFragment.class, UseremoteActivity.this, new Intent("atlas.fragment.intent.action.SECOND_FRAGMENT"),
+//                RemoteFactory.requestRemote(RemoteFragment.class, UseremoteActivity.this, new Intent("atlas.fragment.intent.action.SECOND_FRAGMENT"),
+                RemoteFactory.requestRemote(RemoteFragment.class, UseremoteActivity.this, new Intent("atlas.fragment.intent.action.myremoteFragment"),
                         new RemoteFactory.OnRemoteStateListener<RemoteFragment>() {
                             @Override
                             public void onRemotePrepared(RemoteFragment iRemote) {
@@ -104,7 +106,8 @@ public class UseremoteActivity extends AppCompatActivity {
         findViewById(R.id.btn_tran).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                RemoteFactory.requestRemote(RemoteTransactor.class, UseremoteActivity.this, new Intent("atlas.transaction.intent.action.SECOND_TRANSACTION"),
+//                RemoteFactory.requestRemote(RemoteTransactor.class, UseremoteActivity.this, new Intent("atlas.transaction.intent.action.SECOND_TRANSACTION"),
+                RemoteFactory.requestRemote(RemoteTransactor.class, UseremoteActivity.this, new Intent("atlas.transaction.intent.action.myremoteTransact"),
                         new RemoteFactory.OnRemoteStateListener<RemoteTransactor>() {
                             @Override
                             public void onRemotePrepared(RemoteTransactor iRemote) {
@@ -122,14 +125,15 @@ public class UseremoteActivity extends AppCompatActivity {
                                     }
                                 });
 
-                                ICaculator caculator = iRemote.getRemoteInterface(ICaculator.class,null);
-                                Toast.makeText(RuntimeVariables.androidApplication,"1+1 = "+caculator.sum(1,1),Toast.LENGTH_SHORT).show();
+//                                ICaculator caculator = iRemote.getRemoteInterface(ICaculator.class,null);
+//                                Toast.makeText(RuntimeVariables.androidApplication,"1+1 = "+caculator.sum(1,1),Toast.LENGTH_SHORT).show();
 
                                 //you can also use this
-//                                Bundle bundle = new Bundle();
-//                                bundle.putInt("num1",1);
-//                                bundle.putInt("num2",1);
-//                                Bundle result  = iRemote.call("sum",bundle,null);
+                                Bundle bundle = new Bundle();
+                                bundle.putInt("num1",1);
+                                bundle.putInt("num2",1);
+                                Bundle result  = iRemote.call("sum",bundle,null);
+                                Toast.makeText(RuntimeVariables.androidApplication,"来自于远端的bundle："+result.getString("apple-key"),Toast.LENGTH_SHORT).show();
 //                                Toast.makeText(RuntimeVariables.androidApplication,"1+1 = "+result.getInt("result"),Toast.LENGTH_SHORT).show();
                             }
 

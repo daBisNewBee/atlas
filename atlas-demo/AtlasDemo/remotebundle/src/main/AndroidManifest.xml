@@ -8,6 +8,12 @@
         <activity android:name=".RemoteBundleActivity"
             android:theme="@style/AppTheme.NoActionBar"
             ></activity>
+
+        <!--注意这里的前缀不同！！ -->
+        <meta-data android:name="atlas.fragment.intent.action.myremoteFragment" android:value="com.taobao.remotebunle.MyRemoteFragment"/>
+        <meta-data android:name="atlas.view.intent.action.myremoteView" android:value="com.taobao.remotebunle.MyRemoteView"/>
+        <meta-data android:name="atlas.transaction.intent.action.myremoteTransact" android:value="com.taobao.remotebunle.MyRemoteTransact"/>
+
     </application>
 
 </manifest>
