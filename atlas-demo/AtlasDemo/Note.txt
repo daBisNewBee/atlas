@@ -1,6 +1,68 @@
+组件化Atlas提供的能力分布在三个时期：
+1. 开发期:
+        host、bundle(业务的基本单位)独立开发
+
+        体现在：
+        1.1 gradle插件提供能力，不影响原有开发流程
+
+2. 运行期
+        实现完整的组件生命周期的映射，类隔离、资源共享等机制
+
+        体现在：
+        2.1 运行bundle中的四大组件（其中几个关键技术）
+            Manifest处理:
+                在工程期进行Manifest的Merge，涉及到依赖仲裁问题。
+                （注意：区别于插件化中的处理：预埋坑位，借尸还魂！本质不同！）
+                参考：UseremoteActivity中的处理
+
+        2.2 共享代码资源(bundle使用host中的代码)
+            类加载：TODO
+                DelegateClassLoader
+            资源加载：TODO
+                DelegeteResources
+
+        2.3 bundle按需加载
+            根据记录在"BundleListing"中的清单信息，得到组件所在Bundle，如果需要加载，就进行install、dexopt等
+            参考：AtlasBundleInfoManager.instance().getBundleForRemoteView(key)
+
+        2.4 远程bundle
+            主要了减少包体积。这里是被动在错误回调中安装bundle，其实与"按需加载Bundle"类似
+            参考：Atlas.getInstance().installBundle，DemoApplication
+
+        2.5 解释执行 TODO
+            在dalivk系统上首次使用bundle时关闭了verify,
+            在ART系统上首次使用时关闭了dex2oat走解释执行。
+            同时后台通过异步任务走原生的dexopt过程，为下次使用做好准备
+
+3. 运维期
+        增量更新修复能力，提供对class、so以及资源的增量更新修复能力，快速升级
+
+        体现在：
+        3.1 动态部署
+            用于需求发布、问题修复。生成tpatch包，包括变化的dex和资源文件。
+
+        3.2 dexpatch
+            仅包括dex文件，专注单个bundle的问题修复
+
+几个重要过程:
+1. Atlas启动过程
+
+2. Bundle加载过程
+
+其他：
+1. 绕过 Android P以上非公开API限制的办法
+2. dexopt优化和验证Dalvik
+
 组件化和插件化的区别：
 
 1. 对四大组件的加载不同。
    组件化：实事求是，提前将组件中清单合并到主app的Manifest中，
           而bundle中的Manifest没有任何东西
    插件化：预埋坑位，借尸还魂
+
+
+
+Dex2OatService:
+    DexFile.loadDex(sourcePathName, outputPathName, 0);
+    sourcePathName=/data/user/0/com.taobao.demo/files/storage/com.taobao.secondbundle/3nsg4mrhohecq/bundle.zip,
+    outputPathName=/data/user/0/com.taobao.demo/files/storage/com.taobao.secondbundle/3nsg4mrhohecq/oat/x86/bundle.odex
